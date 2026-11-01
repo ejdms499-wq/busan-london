@@ -57,7 +57,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;paddin
 #win{position:absolute;inset:0;border-radius:18px;overflow:hidden;background:#8aa;
   box-shadow:0 0 0 3px #2b1c12,0 0 0 5px #a3824f,0 0 0 7px #2b1c12,inset 0 0 0 1px rgba(0,0,0,.4)}
 #win canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-#cv{filter:saturate(.86) contrast(.96)}
+#cv{filter:saturate(.95)}
 #glasscv{pointer-events:none;transition:opacity 1.2s}
 #glassrefl{position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;transition:opacity 1.5s;opacity:0;background:radial-gradient(ellipse 9% 7% at 61% 97%,rgba(255,216,160,.30),transparent 70%),radial-gradient(ellipse 48% 30% at 53% 104%,rgba(255,190,120,.22),transparent 70%),radial-gradient(ellipse 30% 20% at 20% 100%,rgba(255,200,140,.06),transparent 70%)}
 #glass{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 30px rgba(0,0,0,.45);
@@ -494,7 +494,8 @@ function drawPhoto(c,S,ph,pxm){
   if(S.light>.5){c.fillStyle='rgba(255,240,220,'+((S.light-.5)*.25)+')';c.fillRect(0,0,W,H)}
   if(ph.dusk&&S.light<.55){c.fillStyle='rgba(6,12,28,'+Math.min(.5,(.55-S.light)*1.1)+')';c.fillRect(0,0,W,H)}
 }
-function drawFG(c,S,pxm){const ph=PHOTO.fg;if(!ph||!ph.ready||B[S.bk].photo==='seoul'||BRIDGES.some(q=>S.km>q[0]&&S.km<q[1]))return;
+const GRASS={busan:1,country:1,kr01:1,kr05:1,kr06:1,kr10:1,kr11:1,kr15:1,kr16:1};
+function drawFG(c,S,pxm){const ph=PHOTO.fg;if(!ph||!ph.ready||!GRASS[B[S.bk].photo]||BRIDGES.some(q=>S.km>q[0]&&S.km<q[1]))return;
   const th=H*.46,sc=th/ph.h,tw=ph.w*sc,off=((S.vo*pxm*1.5)%tw+tw)%tw;
   const bg=c.createLinearGradient(0,H*.7,0,H*.84);bg.addColorStop(0,'rgba(13,14,11,0)');bg.addColorStop(1,'rgba(13,14,11,1)');c.fillStyle=bg;c.fillRect(0,H*.7,W,H*.3);
   c.globalAlpha=S.light>.5?.75:.95;
@@ -541,7 +542,7 @@ function buildBelt(){const q=Math.min(2,DPR||1),bh=Math.round(H*.5*q),bw=Math.ro
   gb.globalCompositeOperation='lighter';for(const L of lights){const [lx,ly,lw,lh]=L;if(lx>bw)continue;const gr=gb.createRadialGradient(lx+lw/2,ly+lh/2,0,lx+lw/2,ly+lh/2,lw*2.4);gr.addColorStop(0,'rgba(255,190,110,.4)');gr.addColorStop(1,'rgba(255,170,90,0)');gb.fillStyle=gr;gb.fillRect(lx-lw*2,ly-lw*2,lw*5,lw*5);gb.fillStyle='rgba(255,214,150,.85)';gb.fillRect(lx,ly,lw,lh)}
   belt={c:cb,w:bw,h:bh}}
 try{buildBelt()}catch(e){}
-function drawBelt(c,S,kind){if(!belt||!BELTK[kind])return;const sc=(H*.5)/belt.h,tw=belt.w*sc,th=belt.h*sc,off=((S.vo*(W/40)*.36)%tw+tw)%tw,y=H*.8-th;
+function drawBelt(c,S,kind){if(!belt||!BELTK[kind]||!GRASS[kind])return;const sc=(H*.5)/belt.h,tw=belt.w*sc,th=belt.h*sc,off=((S.vo*(W/40)*.36)%tw+tw)%tw,y=H*.8-th;
   c.globalAlpha=S.light>.5?.7:1;for(let x=-off;x<W;x+=tw)c.drawImage(belt.c,x,y,tw,th);c.globalAlpha=1}
 const BRIDGES=[[131.4,132.5],[238.2,239.1],[418.15,419.45]];
 function drawLineside(c,S,kind){
@@ -1339,7 +1340,7 @@ $('btnEat').onclick=()=>{const S=cur,fi=S.mode==='run'?S.i:Math.min(S.i,LAST-1);
   toast(FOOD[fi][0],FOOD[fi][1]);$('bento').classList.add('on');clearTimeout(bentoT);bentoT=setTimeout(()=>$('bento').classList.remove('on'),40000)};
 
 // ───────── 루프 ─────────
-let vo=0,lastT=performance.now(),curBk=null,prevBk=null,blend=1,cur={mode:'stop',i:0,km:0,v:0},announced=-1;window.__cur=()=>cur;
+let vo=Math.random()*20000,lastT=performance.now(),curBk=null,prevBk=null,blend=1,cur={mode:'stop',i:0,km:0,v:0},announced=-1;window.__cur=()=>cur;
 let passStart=-1,nextPass=performance.now()+25000+Math.random()*30000;const PASSDUR=2600;
 let miniStart=-1,nextMini=performance.now()+50000+Math.random()*60000,miniNo=0,fStart=-1,nextF=performance.now()+90000+Math.random()*90000,fSeed=0,nextCond=performance.now()+120000+Math.random()*180000;
 let prevTz=null,prevElev=null,sunEv=null,sunCheck=0,sunAlerted='';
@@ -1368,12 +1369,12 @@ function postFX(night){const w=cv.width,h=cv.height;if(!w)return;cx.setTransform
   const b1=bl1.getContext('2d'),b2=bl2.getContext('2d');b1.globalCompositeOperation='copy';b1.drawImage(cv,0,0,sw,sh);
   b1.globalCompositeOperation='multiply';b1.drawImage(bl1,0,0);b1.drawImage(bl1,0,0);
   b2.globalCompositeOperation='copy';b2.drawImage(bl1,0,0,bl2.width,bl2.height);b1.globalCompositeOperation='copy';b1.drawImage(bl2,0,0,sw,sh);
-  cx.globalCompositeOperation='screen';cx.globalAlpha=.55+.35*night;cx.drawImage(bl1,0,0,w,h);
+  cx.globalCompositeOperation='screen';cx.globalAlpha=.3+.2*night;cx.drawImage(bl1,0,0,w,h);
   // 필름처럼 검정을 살짝 띄움
-  cx.globalAlpha=1;cx.fillStyle='rgb(20,24,27)';cx.fillRect(0,0,w,h);
+  cx.globalAlpha=1;cx.fillStyle='rgb(9,11,12)';cx.fillRect(0,0,w,h);
   // 그레인
   if(!grnPat)grnPat=cx.createPattern(grn,'repeat');if((grainTick++&1)===0){gox=Math.random()*192;goy=Math.random()*192}
-  cx.globalCompositeOperation='overlay';cx.globalAlpha=.10+.06*night;cx.translate(-gox,-goy);cx.fillStyle=grnPat;cx.fillRect(gox,goy,w,h);cx.setTransform(1,0,0,1,0,0);
+  cx.globalCompositeOperation='overlay';cx.globalAlpha=.07+.04*night;cx.translate(-gox,-goy);cx.fillStyle=grnPat;cx.fillRect(gox,goy,w,h);cx.setTransform(1,0,0,1,0,0);
   cx.globalAlpha=1;cx.globalCompositeOperation='source-over'}
 function frame(now){
   const dt=Math.min(.1,(now-lastT)/1000);lastT=now;
